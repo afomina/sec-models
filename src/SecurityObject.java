@@ -1,5 +1,6 @@
 public class SecurityObject {
     private String name;
+    private String content;
 
     public SecurityObject() {
     }
@@ -14,6 +15,14 @@ public class SecurityObject {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     @Override

@@ -6,56 +6,118 @@ public class HRUExecutor {
     private static final String CREATE_OBJECT_PATTERN = "create object (.*)";
     private static final String DESTROY_SUBJECT_PATTERN = "destroy subject (.*)";
     private static final String DESTROY_OBJECT_PATTERN = "destroy object (.*)";
-    private static final String ENTER_RULE_PATTERN = "enter ([^ ]*) into A\\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
-    private static final String DELETE_RULE_PATTERN = "delete ([^ ]*) into A\\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
+    private static final String ENTER_RULE_PATTERN = "enter ([^ ]*) into \\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
+    private static final String DELETE_RULE_PATTERN = "delete ([^ ]*) into \\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
     private AccessTable accessTable;
 
     public HRUExecutor() {
         accessTable = new AccessTable();
     }
 
-    public void execute(String command) {
+    public SecurityObject execute(String command) {
+        SecurityObject result = null;
         if (command.startsWith("create subject")) {
             Matcher matcher = Pattern.compile(CREATE_SUBJECT_PATTERN).matcher(command);
             if (matcher.matches()) {
-                accessTable.createSubject(new Subject(matcher.group(1)));
+                result = new Subject(matcher.group(1));
+                accessTable.createSubject((Subject) result);
             }
-            return;
+            return result;
         }
         if (command.startsWith("create object")) {
             Matcher matcher = Pattern.compile(CREATE_OBJECT_PATTERN).matcher(command);
             if (matcher.matches()) {
-                accessTable.createObject(new SecurityObject(matcher.group(1)));
+                result = new SecurityObject(matcher.group(1));
+                accessTable.createObject(result);
             }
-            return;
+            return result;
         }
         if (command.startsWith("destroy object")) {
             Matcher matcher = Pattern.compile(DESTROY_OBJECT_PATTERN).matcher(command);
             if (matcher.matches()) {
-                accessTable.destroyObject(new SecurityObject(matcher.group(1)));
+                result = new SecurityObject(matcher.group(1));
+                accessTable.destroyObject(result);
             }
-            return;
+            return result;
         }
         if (command.startsWith("destroy subject")) {
             Matcher matcher = Pattern.compile(DESTROY_SUBJECT_PATTERN).matcher(command);
             if (matcher.matches()) {
-                accessTable.destroySubject(new Subject(matcher.group(1)));
+                result = new Subject(matcher.group(1));
+                accessTable.destroySubject((Subject)result);
             }
-            return;
+            return result;
         }
         if (command.startsWith("enter")) {
             Matcher matcher = Pattern.compile(ENTER_RULE_PATTERN).matcher(command);
             if (matcher.matches()) {
                 accessTable.enterRule(new Subject(matcher.group(2)), new SecurityObject(matcher.group(3)), AccessRule.fromStr(matcher.group(1)));
             }
-            return;
         }
         if (command.startsWith("delete")) {
             Matcher matcher = Pattern.compile(DELETE_RULE_PATTERN).matcher(command);
             if (matcher.matches()) {
                 accessTable.deleteRule(new Subject(matcher.group(2)), new SecurityObject(matcher.group(3)), AccessRule.fromStr(matcher.group(1)));
             }
-            return;
         }
+        return null;
     }
+
+    public boolean checkRight(Subject s, SecurityObject o, AccessRule... rules) {
+        if (o == null) {
+            return true;
+        }
+        for (AccessRule rule : rules) {
+            if (!accessTable.hasRight(s, o, rule)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public SecurityObject createFile(Subject user, SecurityObject folder, String file) {
+        SecurityObject f = null;
+        if (checkRight(user, folder, AccessRule.WRITE)) {
+            f = execute("create object " + file);
+            execute("enter own into [" + user.getName() + ", " + file + "]");
+            execute("enter read into [" + user.getName() + ", " + file + "]");
+            execute("enter write into [" + user.getName() + ", " + file + "]");
+            execute("enter execute into [" + user.getName() + ", " + file + "]");
+        }
+        return f;
+    }
+
+    public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder, SecurityObject secretFolder) {
+        Subject trSubject = null;
+        if (checkRight(s, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
+            trSubject = (Subject) execute("create subject str");
+            execute("enter read into [str, " + trojanFolder.getName() + "]");
+            execute("enter write into [str, " + trojanFolder.getName() + "]");
+            execute("enter execute into [str, " + trojanFolder.getName() + "]");
+            execute("enter read into [str, " + trojan.getName() + "]");
+            execute("enter write into [str, " + trojan.getName() + "]");
+            execute("enter execute into [str, " + trojan.getName() + "]");
+        }
+        if (checkRight(s, adminFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE) &&
+                checkRight(s, secretFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
+            execute("enter read into [str, " + adminFolder.getName() + "]");
+            execute("enter write into [str, " + adminFolder.getName() + "]");
+            execute("enter execute into [str, " + adminFolder.getName() + "]");
+            execute("enter read into [str, " + secretFolder.getName() + "]");
+            execute("enter write into [str, " + secretFolder.getName() + "]");
+            execute("enter execute into [str, " + secretFolder.getName() + "]");
+        }
+        return trSubject;
+    }
+
+    public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy) {
+        if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
+            SecurityObject copy = createFile(trojan, folder, "secret-copy");
+            execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
+            copy.setContent(secret.getContent());
+            System.out.println("secret data:\n" + copy.getContent());
+        }
+        execute("destroy subject " + trojan.getName());
+    }
+
 }

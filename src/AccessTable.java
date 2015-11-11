@@ -12,7 +12,7 @@ public class AccessTable {
             System.out.println("no such rule");
             return;
         }
-        if (check(s, obj)) {
+        if (exists(s, obj)) {
             matrix.add(new MatrixElement(s, obj, r));
         }
         System.out.println(matrix);
@@ -23,7 +23,7 @@ public class AccessTable {
             System.out.println("no such rule");
             return;
         }
-        if (check(s, obj)) {
+        if (exists(s, obj)) {
             matrix.remove(new MatrixElement(s, obj, r));
         }
         System.out.println(matrix);
@@ -74,17 +74,7 @@ public class AccessTable {
         System.out.println(avaiableObjects);
     }
 
-//    protected void check(SecurityObject... objects) throws HRUException {
-//        for (SecurityObject object : objects) {
-//            if (object instanceof Subject) {
-//                check((Subject) object);
-//            } else {
-//                check(object);
-//            }
-//        }
-//    }
-
-    protected boolean check(Subject s, SecurityObject o) {
+    protected boolean exists(Subject s, SecurityObject o) {
         return check(s) && check(o);
     }
 
@@ -102,5 +92,9 @@ public class AccessTable {
             return false;
         }
         return true;
+    }
+
+    public boolean hasRight(Subject s, SecurityObject obj, AccessRule r) {
+        return matrix.contains(new MatrixElement(s, obj, r));
     }
 }

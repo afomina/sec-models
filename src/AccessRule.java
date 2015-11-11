@@ -1,5 +1,5 @@
 public enum AccessRule {
-    READ, WRITE;
+    READ, WRITE, EXECUTE, OWN;
 
     static AccessRule fromStr(String cmd) {
         for (AccessRule rule : values()) {
