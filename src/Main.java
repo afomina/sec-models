@@ -2,7 +2,10 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        int mode = 2;
         HRUExecutor executor = new HRUExecutor();
+//        executor.setEnableProtection(true);
+
 //        Scanner scanner = new Scanner(System.in);
 //        while (true) {
 //            executor.execute(scanner.nextLine());
@@ -15,7 +18,14 @@ public class Main {
         secretFolder.setContent("some secret info");
         executor.execute("enter read into [admin, o2]");
 
-        executor.grantAccess(user, admin, userFolder, AccessRule.WRITE, AccessRule.EXECUTE);
-        Exercise.doEx(admin, user, adminFolder, userFolder, secretFolder, executor);
+        if (mode == 1) {
+            executor.grantAccess(user, admin, userFolder, AccessRule.WRITE, AccessRule.EXECUTE);
+            Exercise.doEx(admin, user, adminFolder, userFolder, secretFolder, executor);
+        } else if (mode == 2) {
+            SecurityObject o4 = executor.createFile(user, null, "o4");
+            executor.grantAccess(user, admin, o4, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+            Exercise.doEx(admin, user, adminFolder, o4, secretFolder, executor);
+        }
+
     }
 }

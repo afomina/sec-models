@@ -9,9 +9,18 @@ public class HRUExecutor {
     private static final String ENTER_RULE_PATTERN = "enter ([^ ]*) into \\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
     private static final String DELETE_RULE_PATTERN = "delete ([^ ]*) into \\[([^ ,\\]]*), ?([^ ,\\]]*)\\]";
     private AccessTable accessTable;
+    private boolean enableProtection = false;
 
     public HRUExecutor() {
         accessTable = new AccessTable();
+    }
+
+    public boolean isEnableProtection() {
+        return enableProtection;
+    }
+
+    public void setEnableProtection(boolean enableProtection) {
+        this.enableProtection = enableProtection;
     }
 
     public SecurityObject execute(String command) {
@@ -44,7 +53,7 @@ public class HRUExecutor {
             Matcher matcher = Pattern.compile(DESTROY_SUBJECT_PATTERN).matcher(command);
             if (matcher.matches()) {
                 result = new Subject(matcher.group(1));
-                accessTable.destroySubject((Subject)result);
+                accessTable.destroySubject((Subject) result);
             }
             return result;
         }
@@ -69,6 +78,7 @@ public class HRUExecutor {
         }
         for (AccessRule rule : rules) {
             if (!accessTable.hasRight(s, o, rule)) {
+                System.out.println(s.getName() + " has no " + rule + " access "); //+ (o == null ? "" : "to " + o.getName()));
                 return false;
             }
         }
@@ -90,16 +100,18 @@ public class HRUExecutor {
     public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder, SecurityObject secretFolder) {
         Subject trSubject = null;
         if (checkRight(s, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
-            trSubject = (Subject) execute("create subject str");
-            execute("enter read into [str, " + trojanFolder.getName() + "]");
-            execute("enter write into [str, " + trojanFolder.getName() + "]");
-            execute("enter execute into [str, " + trojanFolder.getName() + "]");
-            execute("enter read into [str, " + trojan.getName() + "]");
-            execute("enter write into [str, " + trojan.getName() + "]");
-            execute("enter execute into [str, " + trojan.getName() + "]");
+            if (enableProtection && checkRight(s, trojan, AccessRule.CREATE_SUBJECTS) || !enableProtection) {
+                trSubject = (Subject) execute("create subject str");
+                execute("enter read into [str, " + trojanFolder.getName() + "]");
+                execute("enter write into [str, " + trojanFolder.getName() + "]");
+                execute("enter execute into [str, " + trojanFolder.getName() + "]");
+                execute("enter read into [str, " + trojan.getName() + "]");
+                execute("enter write into [str, " + trojan.getName() + "]");
+                execute("enter execute into [str, " + trojan.getName() + "]");
+            }
         }
         if (checkRight(s, adminFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE) &&
-                checkRight(s, secretFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
+                checkRight(s, secretFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE) && trSubject != null) {
             execute("enter read into [str, " + adminFolder.getName() + "]");
             execute("enter write into [str, " + adminFolder.getName() + "]");
             execute("enter execute into [str, " + adminFolder.getName() + "]");
@@ -111,13 +123,16 @@ public class HRUExecutor {
     }
 
     public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy) {
-        if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
-            SecurityObject copy = createFile(trojan, folder, "secret-copy");
-            execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
-            copy.setContent(secret.getContent());
-            System.out.println("secret data:\n" + copy.getContent());
+        if (trojan != null) {
+            if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
+                SecurityObject copy = createFile(trojan, folder, "secret-copy");
+                execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
+                copy.setContent(secret.getContent());
+                System.out.println("secret data:\n" + copy.getContent());
+            }
+
+            execute("destroy subject " + trojan.getName());
         }
-        execute("destroy subject " + trojan.getName());
     }
 
     public void grantAccess(Subject s, Subject t, SecurityObject obj, AccessRule... rules) {
