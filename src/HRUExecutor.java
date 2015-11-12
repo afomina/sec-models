@@ -128,7 +128,9 @@ public class HRUExecutor {
                 SecurityObject copy = createFile(trojan, folder, "secret-copy");
                 execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
                 copy.setContent(secret.getContent());
-                System.out.println("secret data:\n" + copy.getContent());
+                if (checkRight(badGuy, copy, AccessRule.READ)) {
+                    System.out.println("secret data:\n" + copy.getContent());
+                }
             }
 
             execute("destroy subject " + trojan.getName());
