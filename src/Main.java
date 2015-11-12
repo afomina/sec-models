@@ -14,6 +14,8 @@ public class Main {
         SecurityObject secretFolder = executor.createFile(admin, null, "o3");
         secretFolder.setContent("some secret info");
         executor.execute("enter read into [admin, o2]");
+
+        executor.grantAccess(user, admin, userFolder, AccessRule.WRITE, AccessRule.EXECUTE);
         Exercise.doEx(admin, user, adminFolder, userFolder, secretFolder, executor);
     }
 }

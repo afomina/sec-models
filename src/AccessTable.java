@@ -15,7 +15,7 @@ public class AccessTable {
         if (exists(s, obj)) {
             matrix.add(new MatrixElement(s, obj, r));
         }
-        System.out.println(matrix);
+//        System.out.println(matrix);
     }
 
     public void deleteRule(Subject s, SecurityObject obj, AccessRule r) {
@@ -26,21 +26,21 @@ public class AccessTable {
         if (exists(s, obj)) {
             matrix.remove(new MatrixElement(s, obj, r));
         }
-        System.out.println(matrix);
+//        System.out.println(matrix);
     }
 
     public void createSubject(Subject s) {
         if (!avaiableSubjects.add(s)) {
             System.out.println("Subject " + s + "already exists");
         }
-        System.out.println(avaiableSubjects);
+//        System.out.println(avaiableSubjects);
     }
 
     public void createObject(SecurityObject obj) {
         if (!avaiableObjects.add(obj)) {
             System.out.println("Object " + obj + "already exists");
         }
-        System.out.println(avaiableObjects);
+//        System.out.println(avaiableObjects);
     }
 
     public void destroySubject(Subject s) {
@@ -53,7 +53,7 @@ public class AccessTable {
                 }
             }
         }
-        System.out.println(avaiableSubjects);
+//        System.out.println(avaiableSubjects);
     }
 
     public void destroyObject(SecurityObject obj) {
@@ -71,7 +71,7 @@ public class AccessTable {
                 iterator.remove();
             }
         }
-        System.out.println(avaiableObjects);
+//        System.out.println(avaiableObjects);
     }
 
     protected boolean exists(Subject s, SecurityObject o) {

@@ -120,4 +120,12 @@ public class HRUExecutor {
         execute("destroy subject " + trojan.getName());
     }
 
+    public void grantAccess(Subject s, Subject t, SecurityObject obj, AccessRule... rules) {
+        if (checkRight(s, obj, AccessRule.OWN)) {
+            for (AccessRule rule : rules) {
+                execute(String.format("enter %s into [%s, %s]", rule, t.getName(), obj.getName()));
+            }
+        }
+    }
+
 }
