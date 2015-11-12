@@ -2,14 +2,14 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        int mode = 2;
         HRUExecutor executor = new HRUExecutor();
-//        executor.setEnableProtection(true);
 
-//        Scanner scanner = new Scanner(System.in);
-//        while (true) {
-//            executor.execute(scanner.nextLine());
-//        }
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter mode (1 or 2)");
+        int mode = scanner.nextInt();
+        System.out.println("Enable protection? (yes/no)");
+        executor.setEnableProtection(scanner.next().equalsIgnoreCase("yes"));
+
         Subject admin = (Subject) executor.execute("create subject admin");
         Subject user = (Subject) executor.execute("create subject user");
         SecurityObject adminFolder = executor.createFile(admin, null, "o1");
