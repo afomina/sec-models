@@ -2,6 +2,10 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+
+    }
+
+    private static void hru() {
         HRUExecutor executor = new HRUExecutor();
 
         Scanner scanner = new Scanner(System.in);
@@ -26,6 +30,29 @@ public class Main {
             executor.grantAccess(user, admin, o4, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
             Exercise.doEx(admin, user, adminFolder, o4, secretFolder, executor);
         }
+    }
 
+    private static void tam() {
+        HRUExecutor executor = new HRUExecutor();
+        AccessTable table = executor.getAccessTable();
+        Subject s1 = createSubject("s1", Type.U, table);
+
+        SecurityObject o1 = new SecurityObject("o1");
+        o1.setType(Type.V);
+        table.createObject(o1);
+        executor.setAccess(s1, o1, AccessRule.READ);
+
+        Subject s2 = createSubject("s2", Type.W, table);
+        Subject s3 = createSubject("s3", Type.U, table);
+        executor.setAccess(s2, o1, AccessRule.READ1);
+        executor.setAccess(s3, o1, AccessRule.READ2);
+
+    }
+
+    private static Subject createSubject(String name, Type type, AccessTable table) {
+        Subject s1 = new Subject(name);
+        s1.setType(type);
+        table.createSubject(s1);
+        return s1;
     }
 }

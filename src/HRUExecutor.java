@@ -145,4 +145,14 @@ public class HRUExecutor {
         }
     }
 
+    public void setAccess(Subject s, SecurityObject obj, AccessRule... rules) {
+        for (AccessRule rule : rules) {
+            execute(String.format("enter %s into [%s, %s]", rule, s.getName(), obj.getName()));
+        }
+    }
+
+    protected AccessTable getAccessTable() {
+        return accessTable;
+    }
+
 }

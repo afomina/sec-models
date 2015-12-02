@@ -1,6 +1,7 @@
 public class SecurityObject {
     private String name;
     private String content;
+    private Type type;
 
     public SecurityObject() {
     }
@@ -23,6 +24,14 @@ public class SecurityObject {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     @Override
