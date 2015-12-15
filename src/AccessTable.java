@@ -97,4 +97,13 @@ public class AccessTable {
     public boolean hasRight(Subject s, SecurityObject obj, AccessRule r) {
         return matrix.contains(new MatrixElement(s, obj, r));
     }
+
+    @Override
+    public String toString() {
+        String res = "";
+        for (MatrixElement matrixElement : matrix) {
+            res += matrixElement + "\n";
+        }
+        return res;
+    }
 }

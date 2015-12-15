@@ -87,13 +87,14 @@ public class HRUExecutor {
 
     public SecurityObject createFile(Subject user, SecurityObject folder, String file) {
         SecurityObject f = null;
-        if (checkRight(user, folder, AccessRule.WRITE)) {
+//        if (checkRight(user, folder, AccessRule.WRITE)) {
             f = execute("create object " + file);
-            execute("enter own into [" + user.getName() + ", " + file + "]");
-            execute("enter read into [" + user.getName() + ", " + file + "]");
-            execute("enter write into [" + user.getName() + ", " + file + "]");
-            execute("enter execute into [" + user.getName() + ", " + file + "]");
-        }
+            setAccess(user, folder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+//            execute("enter own into [" + user.getName() + ", " + file + "]");
+//            execute("enter read into [" + user.getName() + ", " + file + "]");
+//            execute("enter write into [" + user.getName() + ", " + file + "]");
+//            execute("enter execute into [" + user.getName() + ", " + file + "]");
+//        }
         return f;
     }
 
@@ -147,7 +148,8 @@ public class HRUExecutor {
 
     public void setAccess(Subject s, SecurityObject obj, AccessRule... rules) {
         for (AccessRule rule : rules) {
-            execute(String.format("enter %s into [%s, %s]", rule, s.getName(), obj.getName()));
+            accessTable.enterRule(s, obj, rule);
+//            execute(String.format("enter %s into [%s, %s]", rule, s.getName(), obj.getName()));
         }
     }
 

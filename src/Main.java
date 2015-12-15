@@ -15,7 +15,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        tam1();
+        tam2();
     }
 
     private static void hru() {
@@ -65,12 +65,13 @@ public class Main {
 //        g.addEdge(begin, Type.U);
         executor.setAccess(s2, o1, AccessRule.READ1);
         executor.setAccess(s3, o1, AccessRule.READ2);
+
+        System.out.println(table);
     }
 
     private static void tam2() {
         HRUExecutor executor = new HRUExecutor();
         AccessTable table = executor.getAccessTable();
-        ListenableGraph g = graph();
         Type parentType = Type.ADMIN;
         Subject s1 = createSubject("s1", parentType, table);
         Subject s2 = createSubject("s2", Type.U, table);
@@ -82,6 +83,8 @@ public class Main {
         o3.setType(Type.V);
         executor.setAccess(s1, o2, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
         Exercise.doEx(s1, s2, o1, o2, o3, executor);
+
+        System.out.println(table);
     }
 
     private static ListenableGraph graph() {
