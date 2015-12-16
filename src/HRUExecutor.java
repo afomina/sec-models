@@ -1,3 +1,4 @@
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,26 +86,42 @@ public class HRUExecutor {
         return true;
     }
 
-    public SecurityObject createFile(Subject user, SecurityObject folder, String file) {
+    public SecurityObject createFile(Subject user, SecurityObject folder, String file, Map<Type, List<Type>> graph, Type type) {
         SecurityObject f = null;
         if (checkRight(user, folder, AccessRule.WRITE)) {
             f = execute("create object " + file);
             setAccess(user, f, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
-//            execute("enter own into [" + user.getName() + ", " + file + "]");
-//            execute("enter read into [" + user.getName() + ", " + file + "]");
-//            execute("enter write into [" + user.getName() + ", " + file + "]");
-//            execute("enter execute into [" + user.getName() + ", " + file + "]");
+
+            f.setType(type);
+            graph.get(user.getType()).add(Type.N);
         }
         return f;
     }
 
     public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder,
-                                 SecurityObject secretFolder, boolean tamProtect) {
+                                 SecurityObject secretFolder, boolean tamProtect, Map<Type, List<Type>> graph) {
         Subject trSubject = null;
         if (checkRight(s, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
             if ((tamProtect && s.getType() == Type.ADMIN && trojan.getType() != Type.N || !tamProtect) && (enableProtection && checkRight(s, trojan, AccessRule.CREATE_SUBJECTS) || !enableProtection)) {
                 trSubject = (Subject) execute("create subject str");
                 trSubject.setType(Type.ADMIN);
+
+                if (graph != null) {
+                    Set<Type> begins = new HashSet<>();
+                    begins.add(s.getType());
+                    begins.add(trojanFolder.getType());
+                    begins.add(trojan.getType());
+                    begins.add(adminFolder.getType());
+                    begins.add(secretFolder.getType());
+
+                    for (Type begin : begins) {
+                        if (!graph.containsKey(begin)) {
+                            graph.put(begin, new ArrayList<>());
+                        }
+                        graph.get(begin).add(Type.ADMIN);
+                    }
+                }
+
                 setAccess(trSubject, trojanFolder, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
 //                execute("enter read into [str, " + trojanFolder.getName() + "]");
 //                execute("enter write into [str, " + trojanFolder.getName() + "]");
@@ -129,11 +146,27 @@ public class HRUExecutor {
         return trSubject;
     }
 
-    public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy) {
+    public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy, Map<Type, List<Type>> graph) {
         if (trojan != null) {
             if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
                 SecurityObject copy = createFile(trojan, folder, "secret-copy");
                 copy.setType(Type.V);
+
+                if (graph != null) {
+                    Set<Type> begins = new HashSet<>();
+                    begins.add(secret.getType());
+                    begins.add(folder.getType());
+                    begins.add(trojan.getType());
+                    begins.add(badGuy.getType());
+
+                    for (Type begin : begins) {
+                        if (!graph.containsKey(begin)) {
+                            graph.put(begin, new ArrayList<>());
+                        }
+                        graph.get(begin).add(Type.V);
+                    }
+                }
+
                 setAccess(badGuy, copy, AccessRule.READ);
 //                execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
                 copy.setContent(secret.getContent());

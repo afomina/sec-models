@@ -1,19 +1,33 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by alexa on 08.11.2015.
  */
 public class Exercise {
-    public static void doEx(Subject admin, Subject user, SecurityObject adminFolder, SecurityObject userFolder, SecurityObject secret, HRUExecutor executor,
+    public static Map<Type, List<Type>> doEx(Subject admin, Subject user, SecurityObject adminFolder, SecurityObject userFolder, SecurityObject secret, HRUExecutor executor,
                             boolean tamProtect) {
-        SecurityObject trojan = executor.createFile(user, userFolder, "trojan");
-        trojan.setType(Type.N);
+        Map<Type, List<Type>> graph = new HashMap<>();
+//        List<Type> begins = new ArrayList<>();
+//        List<Type> ends = new ArrayList<>();
+//        begins.add(admin.getType());
+//        begins.add(user.getType());
+//        begins.add(Type.N);
+
+        graph.put(user.getType(), new ArrayList<>());
+        SecurityObject trojan = executor.createFile(user, userFolder, "trojan", graph, Type.N);
+//        ends.add(trojan.getType());
         if (executor.checkRight(admin, userFolder, AccessRule.READ, AccessRule.WRITE)) {
             executor.setAccess(admin, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
-//            executor.execute("enter read into [" + admin.getName() + ", trojan]");
-//            executor.execute("enter write into [" + admin.getName() + ", trojan]");
-//            executor.execute("enter execute into [" + admin.getName() + ", trojan]");
         }
-        Subject trojanSubject = executor.executeTrojan(admin, userFolder, trojan, adminFolder, secret, tamProtect);
+//        begins.add(userFolder.getType());
+//        begins.add(trojan.getType());
+        Subject trojanSubject = executor.executeTrojan(admin, userFolder, trojan, adminFolder, secret, tamProtect , graph);
 
-        executor.copyFile(secret, trojanSubject, userFolder, user);
+        executor.copyFile(secret, trojanSubject, userFolder, user, graph);
+
+        return graph;
     }
 }

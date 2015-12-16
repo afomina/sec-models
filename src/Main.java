@@ -9,13 +9,13 @@ import org.jgrapht.graph.ListenableDirectedGraph;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        tam2();
+//        tam1();
+        tam2(false);
     }
 
     private static void hru() {
@@ -46,30 +46,62 @@ public class Main {
     }
 
     private static void tam1() {
+
         HRUExecutor executor = new HRUExecutor();
         AccessTable table = executor.getAccessTable();
-        ListenableGraph g = graph();
+//        ListenableGraph g = graph();
         Type begin = Type.U;
         Subject s1 = createSubject("s1", begin, table);
+
+        Map<Type, List<Type>> graph = tam1(executor, s1, Type.W, Type.V);
+        for (Map.Entry<Type, List<Type>> entry : graph.entrySet()) {
+            Type a = entry.getKey();
+            for (Type type : graph.get(a)) {
+                System.out.println(a + "->" + type);
+            }
+        }
+
+    }
+
+    private static Map<Type, List<Type>> tam1(HRUExecutor executor, Subject s1, Type ... types) {
+        Map<Type, List<Type>> graph = new HashMap<>();
+        AccessTable table = executor.getAccessTable();
+        List<Type> ends  = new ArrayList<>();
 
         SecurityObject o1 = new SecurityObject("o1");
         Type end = Type.V;
         o1.setType(end);
+        ends.add(end);
 //        g.addEdge(begin, end);
         table.createObject(o1);
         executor.setAccess(s1, o1, AccessRule.READ);
 
         Subject s2 = createSubject("s2", Type.W, table);
+        ends.add(Type.W);
 //        g.addEdge(begin, Type.W);
         Subject s3 = createSubject("s3", Type.U, table);
+        ends.add(Type.U);
 //        g.addEdge(begin, Type.U);
         executor.setAccess(s2, o1, AccessRule.READ1);
         executor.setAccess(s3, o1, AccessRule.READ2);
 
-        System.out.println(table);
+        for (Type type : ends) {
+            if (!graph.containsKey(s1.getType())) {
+                graph.put(s1.getType(), new ArrayList<>());
+            }
+            graph.get(s1.getType()).add(type);
+            for (Type begin : types) {
+                if (!graph.containsKey(begin)) {
+                    graph.put(begin, new ArrayList<>());
+                }
+                graph.get(begin).add(type);
+            }
+        }
+//        System.out.println(table);
+        return graph;
     }
 
-    private static void tam2() {
+    private static void tam2(boolean protect) {
         HRUExecutor executor = new HRUExecutor();
         AccessTable table = executor.getAccessTable();
         Type parentType = Type.ADMIN;
@@ -83,9 +115,50 @@ public class Main {
         o3.setType(Type.V);
         o3.setContent("SECRET");
         executor.setAccess(s1, o2, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
-        Exercise.doEx(s1, s2, o1, o2, o3, executor, true);
 
-        System.out.println(table);
+        Map<Type, List<Type>> graph = Exercise.doEx(s1, s2, o1, o2, o3, executor, protect);
+
+        for (Map.Entry<Type, List<Type>> entry : graph.entrySet()) {
+            Type a = entry.getKey();
+            for (Type type : graph.get(a)) {
+                System.out.println(a + "->" + type);
+            }
+        }
+//        System.out.println(table);
+//
+//        ListenableGraph g = new ListenableDirectedGraph(DefaultEdge.class);
+//        JGraphModelAdapter adapter = new JGraphModelAdapter(g);
+//        JGraph graph = new JGraph(adapter);
+//
+//        Type[] types = {Type.ADMIN, Type.U, Type.V, Type.N};
+//        for (Type type : types) {
+//            g.addVertex(type);
+//        }
+//        positionVertexAt(Type.U, 130, 40, adapter);
+//        positionVertexAt(Type.V, 60, 200, adapter);
+//        positionVertexAt(Type.N, 310, 230, adapter);
+//        positionVertexAt(Type.ADMIN, 410, 530, adapter);
+//
+//        for (Type a : new Type[]{Type.ADMIN, Type.U, Type.N}) {
+//            for (Type b : types) {
+//                g.addEdge(a, Type.N);
+//            }
+//        }
+//        for (Type a : types) {
+//            for (Type b : types) {
+//                g.addEdge(a, Type.ADMIN);
+//            }
+//        }
+//        for (Type a : new Type[]{Type.ADMIN, Type.V, Type.N}) {
+//            for (Type b : types) {
+//                g.addEdge(a, Type.V);
+//            }
+//        }
+//
+//        JFrame frame = new JFrame();
+//        frame.setSize(700, 800);
+//        frame.getContentPane().add(graph);
+//        frame.setVisible(true);
     }
 
     private static ListenableGraph graph() {
