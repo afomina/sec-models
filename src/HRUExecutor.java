@@ -78,7 +78,7 @@ public class HRUExecutor {
         }
         for (AccessRule rule : rules) {
             if (!accessTable.hasRight(s, o, rule)) {
-                System.out.println(s.getName() + " has no " + rule + " access "); //+ (o == null ? "" : "to " + o.getName()));
+                System.out.println(s.getName() + " has no " + rule + " access " + (o == null ? "" : "to " + o.getName()));
                 return false;
             }
         }
@@ -87,28 +87,34 @@ public class HRUExecutor {
 
     public SecurityObject createFile(Subject user, SecurityObject folder, String file) {
         SecurityObject f = null;
-//        if (checkRight(user, folder, AccessRule.WRITE)) {
+        if (checkRight(user, folder, AccessRule.WRITE)) {
             f = execute("create object " + file);
-            setAccess(user, folder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+            setAccess(user, f, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
 //            execute("enter own into [" + user.getName() + ", " + file + "]");
 //            execute("enter read into [" + user.getName() + ", " + file + "]");
 //            execute("enter write into [" + user.getName() + ", " + file + "]");
 //            execute("enter execute into [" + user.getName() + ", " + file + "]");
-//        }
+        }
         return f;
     }
 
-    public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder, SecurityObject secretFolder) {
+    public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder,
+                                 SecurityObject secretFolder, boolean tamProtect) {
         Subject trSubject = null;
         if (checkRight(s, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
-            if (enableProtection && checkRight(s, trojan, AccessRule.CREATE_SUBJECTS) || !enableProtection) {
+            if ((tamProtect && s.getType() == Type.ADMIN && trojan.getType() != Type.N || !tamProtect) && (enableProtection && checkRight(s, trojan, AccessRule.CREATE_SUBJECTS) || !enableProtection)) {
                 trSubject = (Subject) execute("create subject str");
-                execute("enter read into [str, " + trojanFolder.getName() + "]");
-                execute("enter write into [str, " + trojanFolder.getName() + "]");
-                execute("enter execute into [str, " + trojanFolder.getName() + "]");
-                execute("enter read into [str, " + trojan.getName() + "]");
-                execute("enter write into [str, " + trojan.getName() + "]");
-                execute("enter execute into [str, " + trojan.getName() + "]");
+                trSubject.setType(Type.ADMIN);
+                setAccess(trSubject, trojanFolder, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+//                execute("enter read into [str, " + trojanFolder.getName() + "]");
+//                execute("enter write into [str, " + trojanFolder.getName() + "]");
+//                execute("enter execute into [str, " + trojanFolder.getName() + "]");
+                setAccess(trSubject, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+//                execute("enter read into [str, " + trojan.getName() + "]");
+//                execute("enter write into [str, " + trojan.getName() + "]");
+//                execute("enter execute into [str, " + trojan.getName() + "]");
+            } else {
+                System.out.println("ACCESS DENIED");
             }
         }
         if (checkRight(s, adminFolder, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE) &&
@@ -127,7 +133,9 @@ public class HRUExecutor {
         if (trojan != null) {
             if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
                 SecurityObject copy = createFile(trojan, folder, "secret-copy");
-                execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
+                copy.setType(Type.V);
+                setAccess(badGuy, copy, AccessRule.READ);
+//                execute(String.format("enter read into [%s, %s]", badGuy.getName(), copy.getName()));
                 copy.setContent(secret.getContent());
                 if (checkRight(badGuy, copy, AccessRule.READ)) {
                     System.out.println("secret data:\n" + copy.getContent());

@@ -37,11 +37,11 @@ public class Main {
 
         if (mode == 1) {
             executor.grantAccess(user, admin, userFolder, AccessRule.WRITE, AccessRule.EXECUTE);
-            Exercise.doEx(admin, user, adminFolder, userFolder, secretFolder, executor);
+            Exercise.doEx(admin, user, adminFolder, userFolder, secretFolder, executor, false);
         } else if (mode == 2) {
             SecurityObject o4 = executor.createFile(user, null, "o4");
             executor.grantAccess(user, admin, o4, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
-            Exercise.doEx(admin, user, adminFolder, o4, secretFolder, executor);
+            Exercise.doEx(admin, user, adminFolder, o4, secretFolder, executor, false);
         }
     }
 
@@ -81,8 +81,9 @@ public class Main {
         o2.setType(Type.N);
         SecurityObject o3 = executor.createFile(s1, o1, "o3");
         o3.setType(Type.V);
+        o3.setContent("SECRET");
         executor.setAccess(s1, o2, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
-        Exercise.doEx(s1, s2, o1, o2, o3, executor);
+        Exercise.doEx(s1, s2, o1, o2, o3, executor, true);
 
         System.out.println(table);
     }
