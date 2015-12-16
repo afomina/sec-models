@@ -60,10 +60,8 @@ public class MatrixElement {
 
     @Override
     public String toString() {
-        return "MatrixElement{" +
-                "subject=" + subject +
+        return "subject=" + subject +
                 ", object=" + object +
-                ", rule=" + rule +
-                '}';
+                ", rule=" + rule;
     }
 }

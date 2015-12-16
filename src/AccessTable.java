@@ -88,7 +88,7 @@ public class AccessTable {
 
     protected boolean check(SecurityObject obj) {
         if (!avaiableObjects.contains(obj)) {
-            System.out.println("Object " + obj + " not in objects set");
+            if (obj != null) System.out.println("Object " + obj + " not in objects set");
             return false;
         }
         return true;
