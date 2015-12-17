@@ -86,20 +86,26 @@ public class HRUExecutor {
         return true;
     }
 
-    public SecurityObject createFile(Subject user, SecurityObject folder, String file, Map<Type, List<Type>> graph, Type type) {
+    public SecurityObject createFile(Subject user, SecurityObject folder, String file, Map<Type, Set<Type>> graph, Type type) {
         SecurityObject f = null;
         if (checkRight(user, folder, AccessRule.WRITE)) {
             f = execute("create object " + file);
             setAccess(user, f, AccessRule.OWN, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
 
             f.setType(type);
-            graph.get(user.getType()).add(Type.N);
+            if (graph != null) {
+                graph.get(user.getType()).add(type);
+                if (!graph.containsKey(type)) {
+                    graph.put(type, new HashSet<Type>());
+                }
+                graph.get(type).add(type);
+            }
         }
         return f;
     }
 
     public Subject executeTrojan(Subject s, SecurityObject trojanFolder, SecurityObject trojan, SecurityObject adminFolder,
-                                 SecurityObject secretFolder, boolean tamProtect, Map<Type, List<Type>> graph) {
+                                 SecurityObject secretFolder, boolean tamProtect, Map<Type, Set<Type>> graph) {
         Subject trSubject = null;
         if (checkRight(s, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE)) {
             if ((tamProtect && s.getType() == Type.ADMIN && trojan.getType() != Type.N || !tamProtect) && (enableProtection && checkRight(s, trojan, AccessRule.CREATE_SUBJECTS) || !enableProtection)) {
@@ -116,7 +122,7 @@ public class HRUExecutor {
 
                     for (Type begin : begins) {
                         if (!graph.containsKey(begin)) {
-                            graph.put(begin, new ArrayList<>());
+                            graph.put(begin, new HashSet<Type>());
                         }
                         graph.get(begin).add(Type.ADMIN);
                     }
@@ -146,24 +152,22 @@ public class HRUExecutor {
         return trSubject;
     }
 
-    public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy, Map<Type, List<Type>> graph) {
+    public void copyFile(SecurityObject secret, Subject trojan, SecurityObject folder, Subject badGuy, Map<Type, Set<Type>> graph) {
         if (trojan != null) {
             if (checkRight(trojan, secret, AccessRule.READ) && checkRight(trojan, folder, AccessRule.WRITE)) {
-                SecurityObject copy = createFile(trojan, folder, "secret-copy");
-                copy.setType(Type.V);
+                SecurityObject copy = createFile(trojan, folder, "secret-copy", graph, secret.getType());
 
                 if (graph != null) {
                     Set<Type> begins = new HashSet<>();
                     begins.add(secret.getType());
                     begins.add(folder.getType());
                     begins.add(trojan.getType());
-                    begins.add(badGuy.getType());
 
                     for (Type begin : begins) {
                         if (!graph.containsKey(begin)) {
-                            graph.put(begin, new ArrayList<>());
+                            graph.put(begin, new HashSet<Type>());
                         }
-                        graph.get(begin).add(Type.V);
+                        graph.get(begin).add(copy.getType());
                     }
                 }
 

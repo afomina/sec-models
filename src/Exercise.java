@@ -1,26 +1,19 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by alexa on 08.11.2015.
  */
 public class Exercise {
-    public static Map<Type, List<Type>> doEx(Subject admin, Subject user, SecurityObject adminFolder, SecurityObject userFolder, SecurityObject secret, HRUExecutor executor,
+    public static Map<Type, Set<Type>> doEx(Subject admin, Subject user, SecurityObject adminFolder, SecurityObject userFolder, SecurityObject secret, HRUExecutor executor,
                             boolean tamProtect) {
-        Map<Type, List<Type>> graph = new HashMap<>();
-//        List<Type> begins = new ArrayList<>();
-//        List<Type> ends = new ArrayList<>();
-//        begins.add(admin.getType());
-//        begins.add(user.getType());
-//        begins.add(Type.N);
+        Map<Type, Set<Type>> graph = new HashMap<>();
 
-        graph.put(user.getType(), new ArrayList<>());
+        graph.put(user.getType(), new HashSet<Type>());
+        graph.put(admin.getType(), new HashSet<Type>());
         SecurityObject trojan = executor.createFile(user, userFolder, "trojan", graph, Type.N);
-//        ends.add(trojan.getType());
         if (executor.checkRight(admin, userFolder, AccessRule.READ, AccessRule.WRITE)) {
             executor.setAccess(admin, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
+            graph.get(admin.getType()).add(trojan.getType());
         }
 //        begins.add(userFolder.getType());
 //        begins.add(trojan.getType());

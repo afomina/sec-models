@@ -1,16 +1,4 @@
-import org.jgraph.JGraph;
-import org.jgraph.graph.DefaultEdge;
-import org.jgraph.graph.DefaultGraphCell;
-import org.jgraph.graph.GraphConstants;
-import org.jgrapht.ListenableGraph;
-import org.jgrapht.ext.JGraphModelAdapter;
-import org.jgrapht.graph.ListenableDirectedGraph;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.util.*;
-import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,7 +6,7 @@ public class Main {
         tam2(false);
     }
 
-    private static void hru() {
+    /*private static void hru() {
         HRUExecutor executor = new HRUExecutor();
 
         Scanner scanner = new Scanner(System.in);
@@ -43,7 +31,7 @@ public class Main {
             executor.grantAccess(user, admin, o4, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
             Exercise.doEx(admin, user, adminFolder, o4, secretFolder, executor, false);
         }
-    }
+    }*/
 
     private static void tam1() {
 
@@ -87,12 +75,12 @@ public class Main {
 
         for (Type type : ends) {
             if (!graph.containsKey(s1.getType())) {
-                graph.put(s1.getType(), new ArrayList<>());
+                graph.put(s1.getType(), new ArrayList<Type>());
             }
             graph.get(s1.getType()).add(type);
             for (Type begin : types) {
                 if (!graph.containsKey(begin)) {
-                    graph.put(begin, new ArrayList<>());
+                    graph.put(begin, new ArrayList<Type>());
                 }
                 graph.get(begin).add(type);
             }
@@ -107,18 +95,15 @@ public class Main {
         Type parentType = Type.ADMIN;
         Subject s1 = createSubject("s1", parentType, table);
         Subject s2 = createSubject("s2", Type.U, table);
-        SecurityObject o1 = executor.createFile(s1, null, "o1");
-        o1.setType(Type.V);
-        SecurityObject o2 = executor.createFile(s2, null, "o2");
-        o2.setType(Type.N);
-        SecurityObject o3 = executor.createFile(s1, o1, "o3");
-        o3.setType(Type.V);
+        SecurityObject o1 = executor.createFile(s1, null, "o1",null, Type.V);
+        SecurityObject o2 = executor.createFile(s2, null, "o2", null, Type.N);
+        SecurityObject o3 = executor.createFile(s1, o1, "o3", null, Type.V);
         o3.setContent("SECRET");
         executor.setAccess(s1, o2, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
 
-        Map<Type, List<Type>> graph = Exercise.doEx(s1, s2, o1, o2, o3, executor, protect);
+        Map<Type, Set<Type>> graph = Exercise.doEx(s1, s2, o1, o2, o3, executor, protect);
 
-        for (Map.Entry<Type, List<Type>> entry : graph.entrySet()) {
+        for (Map.Entry<Type, Set<Type>> entry : graph.entrySet()) {
             Type a = entry.getKey();
             for (Type type : graph.get(a)) {
                 System.out.println(a + "->" + type);
@@ -161,7 +146,7 @@ public class Main {
 //        frame.setVisible(true);
     }
 
-    private static ListenableGraph graph() {
+    /*private static ListenableGraph graph() {
         ListenableGraph g = new ListenableDirectedGraph(DefaultEdge.class);
         JGraphModelAdapter adapter = new JGraphModelAdapter(g);
         JGraph graph = new JGraph(adapter);
@@ -197,7 +182,7 @@ public class Main {
         Map cellAttr = new HashMap();
         cellAttr.put(cell, attr);
         adapter.edit(cellAttr, null, null, null);
-    }
+    }*/
 
     private static Subject createSubject(String name, Type type, AccessTable table) {
         Subject s1 = new Subject(name);
