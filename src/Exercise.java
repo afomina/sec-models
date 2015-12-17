@@ -11,7 +11,7 @@ public class Exercise {
         graph.put(user.getType(), new HashSet<Type>());
         graph.put(admin.getType(), new HashSet<Type>());
         SecurityObject trojan = executor.createFile(user, userFolder, "trojan", graph, Type.N);
-        if (executor.checkRight(admin, userFolder, AccessRule.READ, AccessRule.WRITE)) {
+        if ((tamProtect && admin.getType() == Type.ADMIN && trojan.getType() != Type.N || !tamProtect) && executor.checkRight(admin, userFolder, AccessRule.READ, AccessRule.WRITE)) {
             executor.setAccess(admin, trojan, AccessRule.READ, AccessRule.WRITE, AccessRule.EXECUTE);
             graph.get(admin.getType()).add(trojan.getType());
         }
